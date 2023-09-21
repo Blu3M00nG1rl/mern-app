@@ -52,10 +52,29 @@ module.exports.deleteUser = async (req, res) => {
 };
 
 module.exports.follow = async (req, res) => {
-    if (!ObjectID.isValid(req.params.id))
-        return res.status(400).send('ID unknown : ' + req.params.id)
+    if (!ObjectID.isValid(req.params.id) || !ObjectID.isValid(req.body.idToFollow))
+        return res.status(400).send('One ID is unknown : ' + req.params.id + ' or ' + req.body.idToFollow)
 
     try {
+        // add to the follower list
+        await UserModel.findByIdAndUpdate(
+            req.params.id,
+            { $addToSet: { following: req.body.idToFollow } },
+            { new: true, upsert: true }
+        )
+
+        // add to following list
+        await UserModel.findByIdAndUpdate(
+            req.body.idToFollow,
+            { $addToSet: { followers: req.params.id } },
+            { new: true, upsert: true }
+
+
+
+        )
+        res.status(201).json("message : " + req.params.id + " follow " + req.body.idToFollow);
+
+
 
     } catch (err) {
         return res.status(500).json({ message: err });
@@ -63,12 +82,32 @@ module.exports.follow = async (req, res) => {
 };
 
 module.exports.unfollow = async (req, res) => {
-    if (!ObjectID.isValid(req.params.id))
-        return res.status(400).send('ID unknown : ' + req.params.id)
+    if (!ObjectID.isValid(req.params.id) || !ObjectID.isValid(req.body.idToUnfollow))
+        return res.status(400).send('One ID is unknown : ' + req.params.id + ' or ' + req.body.idToFollow)
 
     try {
+        // remove from the follower list
+        await UserModel.findByIdAndUpdate(
+            req.params.id,
+            { $pull: { following: req.body.idToUnfollow } },
+            { new: true, upsert: true }
+        )
+
+        // remove to following list
+        await UserModel.findByIdAndUpdate(
+            req.body.idToUnfollow,
+            { $pull: { followers: req.params.id } },
+            { new: true, upsert: true }
+
+
+
+        )
+        res.status(201).json("message : " + req.params.id + " stop following " + req.body.idToUnfollow);
+
+
 
     } catch (err) {
         return res.status(500).json({ message: err });
     }
+
 };
