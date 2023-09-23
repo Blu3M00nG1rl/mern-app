@@ -7,8 +7,8 @@ const userSchema = new mongoose.Schema(
         pseudo: {
             type: String,
             required: true,
-            minLength: 3,
-            maxLength: 55,
+            minlength: 3,
+            maxlength: 55,
             unique: true,
             trim: true
         },
@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema(
             required: true,
             validate: [isEmail],
             lowercase: true,
+            unique: true,
             trim: true
         },
         password: {
@@ -44,7 +45,7 @@ const userSchema = new mongoose.Schema(
         }
     },
     {
-        timestamps: true,
+        timestamps: true
     }
 );
 
