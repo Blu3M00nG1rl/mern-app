@@ -5,7 +5,7 @@ const ObjectID = require('mongoose').Types.ObjectId;
 
 module.exports.readPost = async (req, res) => {
     try {
-        const post = await PostModel.find();
+        const post = await PostModel.find().sort({ createdAt: -1 });
         return res.status(201).json(post);
     } catch (err) {
         console.log('Error to get data : ' + err);
@@ -82,6 +82,7 @@ module.exports.likePost = async (req, res) => {
 
         res.status(201).send("message : " + req.params.id + " liked by " + req.body.id);
 
+
     } catch (err) {
         return res.status(400).send(err);
     }
@@ -109,9 +110,87 @@ module.exports.unlikePost = async (req, res) => {
 
 
 
+
     }
     catch (err) {
         return res.status(400).json(err);
     }
 
+};
+
+module.exports.commentPost = async (req, res) => {
+    if (!ObjectID.isValid(req.params.id))
+        return res.status(400).send('ID unknown : ' + req.params.id);
+
+    try {
+        const newComment = await PostModel.findByIdAndUpdate(
+            req.params.id,
+            {
+                $push: {
+                    comments: {
+                        commenterId: req.body.commenterId,
+                        commenterPseudo: req.body.commenterPseudo,
+                        text: req.body.text,
+                        timestamp: new Date().getTime(),
+                    },
+                },
+            },
+            { new: true });
+
+        console.log(newComment);
+        return res.status(200).send(newComment);
+    } catch (err) {
+        console.log(newComment);
+        return res.status(400).send(err);
+    }
+
+};
+
+module.exports.editCommentPost = async (req, res) => {
+    if (!ObjectID.isValid(req.params.id))
+        return res.status(400).send('ID unknown : ' + req.params.id);
+
+    try {
+        const post = await PostModel.findById(
+            req.params.id
+        )
+
+        const theComment = post.comments.find((comment) =>
+            comment._id.equals(req.body.commentId)
+        );
+
+        if (!theComment) return res.status(404).send("Comment not found");
+        theComment.text = req.body.text;
+
+        post.save();
+        return res.status(200).send(post);
+    } catch (err) {
+        return res.status(400).send(err);
+    }
+};
+
+module.exports.deleteCommentPost = async (req, res) => {
+    if (!ObjectID.isValid(req.params.id))
+        return res.status(400).send('ID unknown : ' + req.params.id)
+
+    try {
+        const post = await PostModel.findByIdAndUpdate(
+            req.params.id,
+            {
+                $pull: {
+                    comments: {
+                        _id: req.body.commentId
+                    }
+                }
+            },
+            { new: true }
+        );
+        post.save();
+        return res.status(200).send(post);
+
+
+    } catch (err) {
+        //console.log(post);
+        return res.status(400).send(err);
+    }
 };
