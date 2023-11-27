@@ -8,7 +8,7 @@ require('./config/db');
 const { checkUser, requireAuth } = require('./middleware/auth.middleware');
 const app = express();
 
-
+//middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
